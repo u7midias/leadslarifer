@@ -196,6 +196,15 @@
         <input type="date" id="f-data">
       </div>
       <div class="form-group">
+        <label>Como chegou</label>
+        <select id="f-canal">
+          <option value="whatsapp">WhatsApp direto</option>
+          <option value="formulario">Formulário do anúncio</option>
+          <option value="indicacao">Indicação</option>
+          <option value="organico">Orgânico (perfil/stories)</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label>Nº de vidas (se empresa)</label>
         <input type="number" id="f-vidas" placeholder="Ex: 5" min="1">
       </div>
@@ -207,6 +216,9 @@
           <option value="concorrente">Foi para concorrente</option>
           <option value="desistiu">Desistiu do plano</option>
           <option value="sem_resposta">Sem resposta</option>
+          <option value="outra_cidade">Outra cidade</option>
+          <option value="pessoa_fisica">Pessoa física</option>
+          <option value="menos_3_vidas">Menos de 3 vidas no CNPJ</option>
           <option value="outro">Outro</option>
         </select>
       </div>
@@ -292,6 +304,7 @@ function openModal(id) {
   document.getElementById('f-criativo').value = lead.criativo || 'c1';
   document.getElementById('f-status').value = lead.status || 'novo';
   document.getElementById('f-data').value = lead.data_lead || new Date().toISOString().split('T')[0];
+  document.getElementById('f-canal').value = lead.canal || 'whatsapp';
   document.getElementById('f-vidas').value = lead.vidas || '';
   document.getElementById('f-motivo').value = lead.motivo || '';
   document.getElementById('f-obs').value = lead.obs || '';
@@ -319,6 +332,7 @@ async function salvarLead() {
     criativo: document.getElementById('f-criativo').value,
     status: document.getElementById('f-status').value,
     data_lead: document.getElementById('f-data').value || null,
+    canal: document.getElementById('f-canal').value || null,
     vidas: document.getElementById('f-vidas').value ? parseInt(document.getElementById('f-vidas').value) : null,
     motivo: document.getElementById('f-motivo').value || null,
     obs: document.getElementById('f-obs').value || null,
@@ -457,10 +471,31 @@ function renderDiagnostico() {
   const fechados = leads.filter(l => l.status === 'fechado').length;
   const perdidos = leads.filter(l => l.status === 'perdido').length;
   const novos = leads.filter(l => l.status === 'novo').length;
+  const emContato = leads.filter(l => l.status === 'contato').length;
+  const comProposta = leads.filter(l => l.status === 'proposta').length;
   const taxa = total ? Math.round((fechados/total)*100) : 0;
   const semResposta = leads.filter(l => l.motivo === 'sem_resposta').length;
   const preco = leads.filter(l => l.motivo === 'preco').length;
   const concorrente = leads.filter(l => l.motivo === 'concorrente').length;
+  const outraCidade = leads.filter(l => l.motivo === 'outra_cidade').length;
+  const pessoaFisica = leads.filter(l => l.motivo === 'pessoa_fisica').length;
+  const menos3vidas = leads.filter(l => l.motivo === 'menos_3_vidas').length;
+  const desqualificados = outraCidade + pessoaFisica + menos3vidas;
+  const taxaDesq = total ? Math.round((desqualificados/total)*100) : 0;
+
+  // Taxa proposta → fechamento
+  const taxaProposta = comProposta + fechados > 0 ? Math.round((fechados/(comProposta+fechados))*100) : null;
+
+  // Canal de origem
+  const viaWpp = leads.filter(l => l.canal === 'whatsapp' || !l.canal).length;
+  const viaForm = leads.filter(l => l.canal === 'formulario').length;
+
+  // Horário com mais leads
+  // Dia da semana com mais leads
+  const diasCount = [0,0,0,0,0,0,0];
+  const diasNome = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  leads.forEach(l => { if(l.data_lead) { const d = new Date(l.data_lead+'T12:00:00'); diasCount[d.getDay()]++; } });
+  const melhorDiaIdx = diasCount.indexOf(Math.max(...diasCount));
 
   const crKeys = ['c1','c2','c3','c4'];
   let melhorCr = null, melhorTaxa = -1;
@@ -478,18 +513,43 @@ function renderDiagnostico() {
   if (total === 0) {
     diags.push({ tipo:'warn', titulo:'Nenhum lead cadastrado ainda', desc:'Comece a registrar os leads que chegam pelo WhatsApp para gerar diagnósticos automáticos.' });
   } else {
+    // Velocidade de resposta
     if (novos > 3) diags.push({ tipo:'danger', titulo:`${novos} leads sem contato`, desc:`Leads frios depois de 5 minutos perdem até 80% da chance de fechar. Entre em contato agora.` });
     else if (novos > 0) diags.push({ tipo:'warn', titulo:`${novos} lead(s) aguardando contato`, desc:'Resposta rápida é o fator que mais impacta conversão em tráfego pago.' });
     else diags.push({ tipo:'ok', titulo:'Todos os leads foram contatados', desc:'Ótimo! Nenhum lead parado sem abordagem.' });
 
+    // Conversão geral
     if (taxa >= 15) diags.push({ tipo:'ok', titulo:`Taxa de conversão de ${taxa}% — acima da média`, desc:'Excelente resultado. Continue escalando o orçamento no criativo que mais converte.' });
     else if (taxa >= 7) diags.push({ tipo:'warn', titulo:`Taxa de conversão de ${taxa}% — pode melhorar`, desc:'A média do setor de seguros é 10–15%. Revise o copy dos criativos e o script de atendimento no WhatsApp.' });
     else if (total >= 5) diags.push({ tipo:'danger', titulo:`Taxa de conversão de ${taxa}% — abaixo da média`, desc:'Conversão muito baixa. Possíveis causas: público errado, criativo genérico, demora na resposta ou proposta sem ancoragem de preço.' });
 
+    // Proposta → fechamento
+    if (taxaProposta !== null && comProposta + fechados >= 4) {
+      if (taxaProposta < 30) diags.push({ tipo:'danger', titulo:`Apenas ${taxaProposta}% das propostas viram venda`, desc:'Você está convertendo o lead mas perdendo na proposta. O problema não é o anúncio — revise o preço, a forma de apresentar a proposta e o follow-up pós-envio.' });
+      else if (taxaProposta >= 50) diags.push({ tipo:'ok', titulo:`${taxaProposta}% das propostas estão fechando`, desc:'Ótima taxa de proposta para venda. O gargalo pode estar na geração de leads qualificados.' });
+    }
+
+    // Qualidade dos leads (desqualificados)
+    if (taxaDesq > 30) diags.push({ tipo:'danger', titulo:`${taxaDesq}% dos leads são desqualificados`, desc:`${desqualificados} leads perdidos por estarem fora do perfil (outra cidade, pessoa física ou menos de 3 vidas). O criativo precisa filtrar melhor antes do clique — adicione restrições claras no texto do anúncio.` });
+    else if (taxaDesq > 15) diags.push({ tipo:'warn', titulo:`${taxaDesq}% de leads fora do perfil`, desc:'Revise a segmentação do anúncio e deixe os critérios (CNPJ, mínimo 3 vidas, cidade) mais visíveis no criativo.' });
+    else if (total >= 5) diags.push({ tipo:'ok', titulo:'Qualidade dos leads está boa', desc:'Menos de 15% de leads desqualificados — o criativo está filtrando bem o público.' });
+
+    // Motivos de perda
     if (semResposta > 2) diags.push({ tipo:'danger', titulo:`${semResposta} leads perdidos por falta de resposta`, desc:'Configure uma mensagem automática no WhatsApp Business para responder na hora que o lead chegar.' });
     if (preco > 2) diags.push({ tipo:'warn', titulo:`${preco} leads perdidos por preço`, desc:'Objeção de preço alta indica público fora do perfil ou proposta sem ancoragem de valor. Mostre o custo de uma internação vs o valor do plano.' });
     if (concorrente > 1) diags.push({ tipo:'warn', titulo:`${concorrente} leads foram para concorrente`, desc:'Leads comparando preços. Adicione diferenciais: atendimento rápido, cotação grátis, acesso a hospitais de referência.' });
+    if (outraCidade > 2) diags.push({ tipo:'warn', titulo:`${outraCidade} leads fora da área de atendimento`, desc:'Revise a segmentação geográfica no Meta — limite o raio de entrega para as cidades que você atende.' });
+    if (pessoaFisica > 2) diags.push({ tipo:'warn', titulo:`${pessoaFisica} leads pessoa física`, desc:'Deixe mais explícito no anúncio: "exclusivo para quem tem CNPJ". Filtra antes do clique e economiza orçamento.' });
+    if (menos3vidas > 2) diags.push({ tipo:'warn', titulo:`${menos3vidas} leads com menos de 3 vidas`, desc:'Adicione "mínimo 3 vidas" no criativo para desqualificar antes do clique.' });
 
+    // Canal de origem
+    if (viaForm > viaWpp && viaForm >= 3) diags.push({ tipo:'warn', titulo:'Maioria dos leads vem de formulário', desc:'Leads de formulário costumam ser mais frios que os do WhatsApp direto. Considere testar objetivo de campanha "Mensagens" no Meta para receber mais via WhatsApp.' });
+    if (viaWpp > viaForm && viaWpp >= 3) diags.push({ tipo:'ok', titulo:'Maioria dos leads chega pelo WhatsApp', desc:'Leads diretos pelo WhatsApp tendem a converter mais — continue priorizando esse objetivo de campanha.' });
+
+    // Dia da semana
+    if (Math.max(...diasCount) >= 3) diags.push({ tipo:'ok', titulo:`${diasNome[melhorDiaIdx]}feira é o dia com mais leads`, desc:`Considere aumentar o orçamento diário nas ${diasNome[melhorDiaIdx]}feiras para aproveitar o pico de interesse.` });
+
+    // Diversidade de criativos
     const crLideres = crKeys.filter(c => leads.filter(l=>l.criativo===c).length > 0);
     if (crLideres.length === 1) diags.push({ tipo:'warn', titulo:'Todos os leads vêm de um único criativo', desc:'Teste pelo menos 2 criativos simultaneamente para ter dados comparativos e escalar com segurança.' });
     if (crLideres.length >= 3) diags.push({ tipo:'ok', titulo:'Você está testando múltiplos criativos', desc:'Com mais dados ficará claro qual criativo escalar e qual pausar.' });
@@ -498,9 +558,11 @@ function renderDiagnostico() {
   document.getElementById('tab-diagnostico').innerHTML = `
     <div class="metrics">
       <div class="metric"><div class="metric-label">Taxa de conversão</div><div class="metric-value">${taxa}%</div><div class="metric-sub">meta: acima de 10%</div></div>
-      <div class="metric"><div class="metric-label">Leads sem contato</div><div class="metric-value" style="color:${novos>5?'#a32d2d':'#3b6d11'};">${novos}</div><div class="metric-sub">responda em até 5min</div></div>
-      <div class="metric"><div class="metric-label">Perdidos por preço</div><div class="metric-value">${preco}</div><div class="metric-sub">objeção de valor</div></div>
-      <div class="metric"><div class="metric-label">Sem resposta</div><div class="metric-value">${semResposta}</div><div class="metric-sub">follow-up necessário</div></div>
+      <div class="metric"><div class="metric-label">Leads sem contato</div><div class="metric-value" style="color:${novos>3?'#a32d2d':'#3b6d11'};">${novos}</div><div class="metric-sub">responda em até 5min</div></div>
+      <div class="metric"><div class="metric-label">Desqualificados</div><div class="metric-value" style="color:${taxaDesq>30?'#a32d2d':taxaDesq>15?'#854f0b':'#3b6d11'};">${taxaDesq}%</div><div class="metric-sub">fora do perfil ideal</div></div>
+      <div class="metric"><div class="metric-label">Proposta → venda</div><div class="metric-value">${taxaProposta !== null ? taxaProposta+'%' : '—'}</div><div class="metric-sub">meta: acima de 40%</div></div>
+      <div class="metric"><div class="metric-label">Via WhatsApp</div><div class="metric-value">${total ? Math.round((viaWpp/total)*100) : 0}%</div><div class="metric-sub">dos leads</div></div>
+      <div class="metric"><div class="metric-label">Sem resposta</div><div class="metric-value" style="color:${semResposta>2?'#a32d2d':'#1a1a1a'};">${semResposta}</div><div class="metric-sub">follow-up necessário</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
       <div class="card">

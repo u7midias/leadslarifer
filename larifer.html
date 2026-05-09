@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Larifer Seguros</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f3ee; color: #1a1a1a; min-height: 100vh; }
+
+  .topbar { background: #0f1b2d; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .logo { background: #C4A96B; color: #0f1b2d; font-weight: 500; font-size: 13px; padding: 6px 10px; border-radius: 6px; letter-spacing: 0.05em; }
+  .topbar h1 { color: #fff; font-size: 15px; font-weight: 500; }
+
+  .tabs { display: flex; background: #fff; border-bottom: 0.5px solid #e0ddd4; padding: 0 24px; }
+  .tab { padding: 12px 18px; font-size: 13px; font-weight: 500; color: #888; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+  .tab.active { color: #0f1b2d; border-bottom-color: #C4A96B; }
+  .tab:hover:not(.active) { color: #444; }
+
+  .page { display: none; padding: 24px; }
+  .page.active { display: block; }
+
+  .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: #f4f3ee; }
+  .btn-primary { background: #0f1b2d; color: #fff; border-color: #0f1b2d; }
+  .btn-primary:hover { background: #1a2d47; }
+  .btn-gold { background: #C4A96B; color: #0f1b2d; border-color: #C4A96B; font-weight: 500; }
+  .btn-gold:hover { background: #b5975a; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-danger { background: #fff0f0; color: #a32d2d; border-color: #f7c1c1; }
+  .btn-danger:hover { background: #fce4e4; }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .metric { background: #fff; border-radius: 10px; padding: 16px; border: 0.5px solid #e0ddd4; }
+  .metric-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-weight: 500; color: #0f1b2d; }
+  .metric-sub { font-size: 12px; color: #888; margin-top: 2px; }
+
+  .card { background: #fff; border-radius: 12px; border: 0.5px solid #e0ddd4; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 14px; font-weight: 500; margin-bottom: 16px; color: #0f1b2d; display: flex; align-items: center; gap: 8px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 500; color: #555; }
+  input, select, textarea { padding: 8px 12px; border-radius: 8px; border: 0.5px solid #ccc; font-size: 13px; color: #1a1a1a; background: #fff; width: 100%; outline: none; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { border-color: #C4A96B; box-shadow: 0 0 0 3px rgba(196,169,107,0.15); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-novo { background: #e6f1fb; color: #185fa5; }
+  .badge-contato { background: #faeeda; color: #854f0b; }
+  .badge-proposta { background: #eeedfe; color: #534ab7; }
+  .badge-fechado { background: #eaf3de; color: #3b6d11; }
+  .badge-perdido { background: #fcebeb; color: #a32d2d; }
+
+  .criativo-badge { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .c1 { background: #FAECE7; color: #993C1D; }
+  .c2 { background: #E1F5EE; color: #0F6E56; }
+  .c3 { background: #FAEEDA; color: #854F0B; }
+  .c4 { background: #E6F1FB; color: #185FA5; }
+  .corg { background: #eeedfe; color: #534ab7; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 0.5px solid #e0ddd4; }
+  td { padding: 12px; border-bottom: 0.5px solid #f0ede6; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #faf9f5; }
+
+  .diag-item { padding: 14px 16px; border-radius: 10px; margin-bottom: 10px; border-left: 3px solid; }
+  .diag-ok { background: #eaf3de; border-color: #3b6d11; }
+  .diag-warn { background: #faeeda; border-color: #854f0b; }
+  .diag-danger { background: #fcebeb; border-color: #a32d2d; }
+  .diag-title { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .diag-ok .diag-title { color: #3b6d11; }
+  .diag-warn .diag-title { color: #854f0b; }
+  .diag-danger .diag-title { color: #a32d2d; }
+  .diag-desc { font-size: 12px; color: #555; line-height: 1.5; }
+
+  .bar-wrap { margin: 8px 0; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 12px; color: #555; margin-bottom: 4px; }
+  .bar-track { background: #e8e6de; border-radius: 4px; height: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+  .filter-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-row input, .filter-row select { width: auto; flex: 1; min-width: 140px; }
+
+  .empty { text-align: center; padding: 40px; color: #aaa; font-size: 13px; }
+  .empty i { font-size: 32px; display: block; margin-bottom: 8px; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 14px; padding: 24px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-header h2 { font-size: 16px; font-weight: 500; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  .score-ring { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; border: 3px solid; font-size: 18px; font-weight: 500; }
+  .score-alto { border-color: #3b6d11; color: #3b6d11; }
+  .score-medio { border-color: #854f0b; color: #854f0b; }
+  .score-baixo { border-color: #a32d2d; color: #a32d2d; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #0f1b2d; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; z-index: 200; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: #3b6d11; }
+  .toast.error { background: #a32d2d; }
+
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; gap: 10px; color: #888; font-size: 13px; }
+  .spinner { width: 20px; height: 20px; border: 2px solid #e0ddd4; border-top-color: #C4A96B; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    td:nth-child(3), td:nth-child(4), th:nth-child(3), th:nth-child(4) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">LF</div>
+    <h1>CRM Larifer Seguros</h1>
+  </div>
+  <button class="btn btn-gold" onclick="openModal()"><i class="ti ti-plus"></i> Novo lead</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dashboard', this)"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+  <div class="tab" onclick="switchTab('leads', this)"><i class="ti ti-users"></i> Leads</div>
+  <div class="tab" onclick="switchTab('diagnostico', this)"><i class="ti ti-chart-bar"></i> Diagnóstico</div>
+</div>
+
+<div id="tab-dashboard" class="page active"></div>
+<div id="tab-leads" class="page"></div>
+<div id="tab-diagnostico" class="page"></div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Novo lead</h2>
+      <button class="btn btn-sm" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nome completo *</label>
+        <input type="text" id="f-nome" placeholder="Ex: João Silva">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp *</label>
+        <input type="text" id="f-wpp" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>Tem CNPJ?</label>
+        <select id="f-cnpj">
+          <option value="sim">Sim</option>
+          <option value="mei">MEI</option>
+          <option value="nao">Não</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Produto de interesse</label>
+        <select id="f-produto">
+          <option value="plano_saude">Plano de saúde</option>
+          <option value="seguro_carro">Seguro de carro</option>
+          <option value="consorcio">Consórcio</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Criativo de origem</label>
+        <select id="f-criativo">
+          <option value="c1">Criativo 1 — ancoragem de preço</option>
+          <option value="c2">Criativo 2 — benefício oculto CNPJ</option>
+          <option value="c3">Criativo 3 — medo / sem plano</option>
+          <option value="c4">Criativo 4 — hospitais de referência</option>
+          <option value="organico">Orgânico / indicação</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="novo">Novo</option>
+          <option value="contato">Em contato</option>
+          <option value="proposta">Proposta enviada</option>
+          <option value="fechado">Fechado</option>
+          <option value="perdido">Perdido</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nº de vidas (se empresa)</label>
+        <input type="number" id="f-vidas" placeholder="Ex: 5" min="1">
+      </div>
+      <div class="form-group">
+        <label>Motivo da perda</label>
+        <select id="f-motivo">
+          <option value="">—</option>
+          <option value="preco">Preço alto</option>
+          <option value="concorrente">Foi para concorrente</option>
+          <option value="desistiu">Desistiu do plano</option>
+          <option value="sem_resposta">Sem resposta</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Observações</label>
+        <textarea id="f-obs" placeholder="Anotações sobre o lead..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvarLead()"><i class="ti ti-check"></i> Salvar lead</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://bumhjyhaqewcfwojlgwc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bWhqeWhhcWV3Y2Z3b2psZ3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjkxNTksImV4cCI6MjA5MzUwNTE1OX0.2l7naJq1_sug0zkENLH3A4yyaiXKjGyEbFM4BbBPzFs';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let leads = [];
+let editingId = null;
+let activeTab = 'dashboard';
+
+const criativos = { c1:'Ancoragem de preço', c2:'Benefício oculto CNPJ', c3:'Medo / sem plano', c4:'Hospitais de referência', organico:'Orgânico' };
+const statusLabels = { novo:'Novo', contato:'Em contato', proposta:'Proposta enviada', fechado:'Fechado', perdido:'Perdido' };
+const statusColors = { novo:'#185fa5', contato:'#854f0b', proposta:'#534ab7', fechado:'#3b6d11', perdido:'#a32d2d' };
+const crColors = { c1:'#993C1D', c2:'#0F6E56', c3:'#854F0B', c4:'#185FA5', organico:'#534ab7' };
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function loading(id) {
+  document.getElementById(id).innerHTML = `<div class="loading"><div class="spinner"></div> Carregando...</div>`;
+}
+
+async function fetchLeads() {
+  const { data, error } = await sb.from('leads_larifer').select('*').order('created_at', { ascending: false });
+  if (error) { toast('Erro ao carregar leads: ' + error.message, 'error'); return; }
+  leads = data || [];
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  el.classList.add('active');
+  activeTab = tab;
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'leads') renderLeads();
+  if (tab === 'diagnostico') renderDiagnostico();
+}
+
+function statusBadge(s) {
+  const map = { novo:'badge-novo', contato:'badge-contato', proposta:'badge-proposta', fechado:'badge-fechado', perdido:'badge-perdido' };
+  return `<span class="badge ${map[s]||'badge-novo'}">${statusLabels[s]||s}</span>`;
+}
+
+function criativoBadge(c) {
+  const map = { c1:'c1', c2:'c2', c3:'c3', c4:'c4', organico:'corg' };
+  return `<span class="criativo-badge ${map[c]||'c1'}">${criativos[c]||c}</span>`;
+}
+
+function fmtData(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('pt-BR');
+}
+
+function openModal(id) {
+  editingId = id || null;
+  document.getElementById('modal-title').textContent = id ? 'Editar lead' : 'Novo lead';
+  const lead = id ? leads.find(l => l.id === id) : {};
+  document.getElementById('f-nome').value = lead.nome || '';
+  document.getElementById('f-wpp').value = lead.wpp || '';
+  document.getElementById('f-cnpj').value = lead.cnpj || 'sim';
+  document.getElementById('f-produto').value = lead.produto || 'plano_saude';
+  document.getElementById('f-criativo').value = lead.criativo || 'c1';
+  document.getElementById('f-status').value = lead.status || 'novo';
+  document.getElementById('f-vidas').value = lead.vidas || '';
+  document.getElementById('f-motivo').value = lead.motivo || '';
+  document.getElementById('f-obs').value = lead.obs || '';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editingId = null;
+}
+
+async function salvarLead() {
+  const nome = document.getElementById('f-nome').value.trim();
+  const wpp = document.getElementById('f-wpp').value.trim();
+  if (!nome || !wpp) { toast('Preencha nome e WhatsApp.', 'error'); return; }
+
+  const btn = document.getElementById('btn-salvar');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></div> Salvando...';
+
+  const payload = {
+    nome, wpp,
+    cnpj: document.getElementById('f-cnpj').value,
+    produto: document.getElementById('f-produto').value,
+    criativo: document.getElementById('f-criativo').value,
+    status: document.getElementById('f-status').value,
+    vidas: document.getElementById('f-vidas').value ? parseInt(document.getElementById('f-vidas').value) : null,
+    motivo: document.getElementById('f-motivo').value || null,
+    obs: document.getElementById('f-obs').value || null,
+  };
+
+  let error;
+  if (editingId) {
+    ({ error } = await sb.from('leads_larifer').update(payload).eq('id', editingId));
+  } else {
+    ({ error } = await sb.from('leads_larifer').insert([payload]));
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-check"></i> Salvar lead';
+
+  if (error) { toast('Erro ao salvar: ' + error.message, 'error'); return; }
+  toast(editingId ? 'Lead atualizado!' : 'Lead cadastrado!');
+  closeModal();
+  await fetchLeads();
+  if (activeTab === 'dashboard') renderDashboard();
+  if (activeTab === 'leads') renderLeads();
+  if (activeTab === 'diagnostico') renderDiagnostico();
+}
+
+async function deletarLead(id) {
+  if (!confirm('Remover este lead?')) return;
+  const { error } = await sb.from('leads_larifer').delete().eq('id', id);
+  if (error) { toast('Erro ao remover: ' + error.message, 'error'); return; }
+  toast('Lead removido.', 'error');
+  await fetchLeads();
+  renderLeads();
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const total = leads.length;
+  const fechados = leads.filter(l => l.status === 'fechado').length;
+  const perdidos = leads.filter(l => l.status === 'perdido').length;
+  const novos = leads.filter(l => l.status === 'novo').length;
+  const taxa = total ? Math.round((fechados/total)*100) : 0;
+
+  const statusOrder = ['novo','contato','proposta','fechado','perdido'];
+  const crKeys = ['c1','c2','c3','c4','organico'];
+
+  document.getElementById('tab-dashboard').innerHTML = `
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Total de leads</div><div class="metric-value">${total}</div></div>
+      <div class="metric"><div class="metric-label">Fechados</div><div class="metric-value" style="color:#3b6d11;">${fechados}</div></div>
+      <div class="metric"><div class="metric-label">Conversão</div><div class="metric-value">${taxa}%</div></div>
+      <div class="metric"><div class="metric-label">Sem contato</div><div class="metric-value" style="color:${novos>3?'#a32d2d':'#854f0b'};">${novos}</div></div>
+      <div class="metric"><div class="metric-label">Perdidos</div><div class="metric-value" style="color:#a32d2d;">${perdidos}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-funnel" aria-hidden="true"></i> Funil de status</div>
+        ${statusOrder.map(s => {
+          const count = leads.filter(l => l.status === s).length;
+          const pct = total ? Math.round((count/total)*100) : 0;
+          return `<div class="bar-wrap">
+            <div class="bar-label"><span>${statusLabels[s]}</span><span style="font-weight:500;">${count}</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${statusColors[s]};"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-ad" aria-hidden="true"></i> Leads por criativo</div>
+        ${crKeys.map(c => {
+          const count = leads.filter(l => l.criativo === c).length;
+          const pct = total ? Math.round((count/total)*100) : 0;
+          return `<div class="bar-wrap">
+            <div class="bar-label"><span>${criativos[c]}</span><span style="font-weight:500;">${count}</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${crColors[c]};"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title"><i class="ti ti-clock" aria-hidden="true"></i> Últimos leads</div>
+      ${leads.length === 0 ? `<div class="empty"><i class="ti ti-users" aria-hidden="true"></i>Nenhum lead ainda. Adicione o primeiro!</div>` :
+      `<table><thead><tr><th>Nome</th><th>Criativo</th><th>Status</th><th>Data</th></tr></thead>
+      <tbody>${leads.slice(0,6).map(l=>`<tr>
+        <td style="font-weight:500;">${l.nome}</td>
+        <td>${criativoBadge(l.criativo)}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td style="color:#888;">${fmtData(l.created_at)}</td>
+      </tr>`).join('')}</tbody></table>`}
+    </div>`;
+}
+
+function renderLeads() {
+  const busca = (document.getElementById('busca-leads')?.value || '').toLowerCase();
+  const fStatus = document.getElementById('filtro-status')?.value || '';
+  const fCriativo = document.getElementById('filtro-criativo')?.value || '';
+
+  const filtered = leads.filter(l => {
+    const matchBusca = !busca || l.nome.toLowerCase().includes(busca) || l.wpp.includes(busca);
+    const matchStatus = !fStatus || l.status === fStatus;
+    const matchCriativo = !fCriativo || l.criativo === fCriativo;
+    return matchBusca && matchStatus && matchCriativo;
+  });
+
+  document.getElementById('tab-leads').innerHTML = `
+    <div class="filter-row">
+      <input type="text" id="busca-leads" placeholder="Buscar por nome ou WhatsApp..." value="${busca}" oninput="renderLeads()">
+      <select id="filtro-status" onchange="renderLeads()">
+        <option value="">Todos os status</option>
+        ${Object.entries(statusLabels).map(([v,l])=>`<option value="${v}" ${fStatus===v?'selected':''}>${l}</option>`).join('')}
+      </select>
+      <select id="filtro-criativo" onchange="renderLeads()">
+        <option value="">Todos os criativos</option>
+        ${Object.entries(criativos).map(([v,l])=>`<option value="${v}" ${fCriativo===v?'selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      ${filtered.length === 0 ?
+        `<div class="empty"><i class="ti ti-users" aria-hidden="true"></i>Nenhum lead encontrado.</div>` :
+        `<table>
+          <thead><tr><th>Nome</th><th>WhatsApp</th><th>Criativo</th><th>Status</th><th>Data</th><th></th></tr></thead>
+          <tbody>${filtered.map(l=>`<tr>
+            <td style="font-weight:500;">${l.nome}</td>
+            <td><a href="https://wa.me/55${l.wpp.replace(/\D/g,'')}" target="_blank" style="color:#0f1b2d;text-decoration:none;display:flex;align-items:center;gap:4px;"><i class="ti ti-brand-whatsapp" style="color:#25d366;font-size:16px;"></i>${l.wpp}</a></td>
+            <td>${criativoBadge(l.criativo)}</td>
+            <td>${statusBadge(l.status)}</td>
+            <td style="color:#888;">${fmtData(l.created_at)}</td>
+            <td><div style="display:flex;gap:6px;">
+              <button class="btn btn-sm" onclick="openModal('${l.id}')"><i class="ti ti-edit"></i></button>
+              <button class="btn btn-sm btn-danger" onclick="deletarLead('${l.id}')"><i class="ti ti-trash"></i></button>
+            </div></td>
+          </tr>`).join('')}</tbody>
+        </table>`}
+    </div>`;
+}
+
+function renderDiagnostico() {
+  const total = leads.length;
+  const fechados = leads.filter(l => l.status === 'fechado').length;
+  const perdidos = leads.filter(l => l.status === 'perdido').length;
+  const novos = leads.filter(l => l.status === 'novo').length;
+  const taxa = total ? Math.round((fechados/total)*100) : 0;
+  const semResposta = leads.filter(l => l.motivo === 'sem_resposta').length;
+  const preco = leads.filter(l => l.motivo === 'preco').length;
+  const concorrente = leads.filter(l => l.motivo === 'concorrente').length;
+
+  const crKeys = ['c1','c2','c3','c4'];
+  let melhorCr = null, melhorTaxa = -1;
+  crKeys.forEach(c => {
+    const t = leads.filter(l => l.criativo === c).length;
+    const f = leads.filter(l => l.criativo === c && l.status === 'fechado').length;
+    const tx = t ? f/t : 0;
+    if (tx > melhorTaxa && t > 0) { melhorTaxa = tx; melhorCr = c; }
+  });
+
+  const score = total === 0 ? null : taxa >= 15 ? 'alto' : taxa >= 7 ? 'medio' : 'baixo';
+  const scoreNum = score === 'alto' ? 'A' : score === 'medio' ? 'B' : score === 'baixo' ? 'C' : '—';
+
+  const diags = [];
+  if (total === 0) {
+    diags.push({ tipo:'warn', titulo:'Nenhum lead cadastrado ainda', desc:'Comece a registrar os leads que chegam pelo WhatsApp para gerar diagnósticos automáticos.' });
+  } else {
+    if (novos > 3) diags.push({ tipo:'danger', titulo:`${novos} leads sem contato`, desc:`Leads frios depois de 5 minutos perdem até 80% da chance de fechar. Entre em contato agora.` });
+    else if (novos > 0) diags.push({ tipo:'warn', titulo:`${novos} lead(s) aguardando contato`, desc:'Resposta rápida é o fator que mais impacta conversão em tráfego pago.' });
+    else diags.push({ tipo:'ok', titulo:'Todos os leads foram contatados', desc:'Ótimo! Nenhum lead parado sem abordagem.' });
+
+    if (taxa >= 15) diags.push({ tipo:'ok', titulo:`Taxa de conversão de ${taxa}% — acima da média`, desc:'Excelente resultado. Continue escalando o orçamento no criativo que mais converte.' });
+    else if (taxa >= 7) diags.push({ tipo:'warn', titulo:`Taxa de conversão de ${taxa}% — pode melhorar`, desc:'A média do setor de seguros é 10–15%. Revise o copy dos criativos e o script de atendimento no WhatsApp.' });
+    else if (total >= 5) diags.push({ tipo:'danger', titulo:`Taxa de conversão de ${taxa}% — abaixo da média`, desc:'Conversão muito baixa. Possíveis causas: público errado, criativo genérico, demora na resposta ou proposta sem ancoragem de preço.' });
+
+    if (semResposta > 2) diags.push({ tipo:'danger', titulo:`${semResposta} leads perdidos por falta de resposta`, desc:'Configure uma mensagem automática no WhatsApp Business para responder na hora que o lead chegar.' });
+    if (preco > 2) diags.push({ tipo:'warn', titulo:`${preco} leads perdidos por preço`, desc:'Objeção de preço alta indica público fora do perfil ou proposta sem ancoragem de valor. Mostre o custo de uma internação vs o valor do plano.' });
+    if (concorrente > 1) diags.push({ tipo:'warn', titulo:`${concorrente} leads foram para concorrente`, desc:'Leads comparando preços. Adicione diferenciais: atendimento rápido, cotação grátis, acesso a hospitais de referência.' });
+
+    const crLideres = crKeys.filter(c => leads.filter(l=>l.criativo===c).length > 0);
+    if (crLideres.length === 1) diags.push({ tipo:'warn', titulo:'Todos os leads vêm de um único criativo', desc:'Teste pelo menos 2 criativos simultaneamente para ter dados comparativos e escalar com segurança.' });
+    if (crLideres.length >= 3) diags.push({ tipo:'ok', titulo:'Você está testando múltiplos criativos', desc:'Com mais dados ficará claro qual criativo escalar e qual pausar.' });
+  }
+
+  document.getElementById('tab-diagnostico').innerHTML = `
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Taxa de conversão</div><div class="metric-value">${taxa}%</div><div class="metric-sub">meta: acima de 10%</div></div>
+      <div class="metric"><div class="metric-label">Leads sem contato</div><div class="metric-value" style="color:${novos>5?'#a32d2d':'#3b6d11'};">${novos}</div><div class="metric-sub">responda em até 5min</div></div>
+      <div class="metric"><div class="metric-label">Perdidos por preço</div><div class="metric-value">${preco}</div><div class="metric-sub">objeção de valor</div></div>
+      <div class="metric"><div class="metric-label">Sem resposta</div><div class="metric-value">${semResposta}</div><div class="metric-sub">follow-up necessário</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-target" aria-hidden="true"></i> Saúde da campanha</div>
+        <div style="display:flex;align-items:center;gap:20px;">
+          <div class="score-ring score-${score||'medio'}">${scoreNum}</div>
+          <div>
+            <div style="font-size:15px;font-weight:500;">${score==='alto'?'Campanha saudável':score==='medio'?'Atenção necessária':score==='baixo'?'Campanha crítica':'Sem dados ainda'}</div>
+            <div style="font-size:12px;color:#888;margin-top:2px;">${score==='alto'?'Conversão acima da média':score==='medio'?'Há espaço para otimização':score==='baixo'?'Revisão urgente necessária':'Cadastre leads para ver'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-award" aria-hidden="true"></i> Criativo mais eficiente</div>
+        ${melhorCr ?
+          `<div style="display:flex;align-items:center;gap:12px;">
+            <span class="criativo-badge ${melhorCr}" style="font-size:13px;padding:6px 12px;">${criativos[melhorCr]}</span>
+            <div><div style="font-size:15px;font-weight:500;">${Math.round(melhorTaxa*100)}% de conversão</div>
+            <div style="font-size:12px;color:#888;">${leads.filter(l=>l.criativo===melhorCr).length} leads gerados</div></div>
+          </div>
+          <p style="font-size:12px;color:#555;margin-top:12px;">Invista mais orçamento nesse criativo — ele traz os leads que convertem.</p>` :
+          `<div style="font-size:13px;color:#888;">Cadastre leads com status fechado para ver o criativo mais eficiente.</div>`}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-bulb" aria-hidden="true"></i> Diagnósticos e recomendações</div>
+      ${diags.map(d=>`<div class="diag-item diag-${d.tipo}">
+        <div class="diag-title">${d.tipo==='ok'?'✓':d.tipo==='warn'?'⚠':'!'} ${d.titulo}</div>
+        <div class="diag-desc">${d.desc}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+async function init() {
+  loading('tab-dashboard');
+  await fetchLeads();
+  renderDashboard();
+}
+
+init();
+</script>
+</body>
+</html>

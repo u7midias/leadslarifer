@@ -173,13 +173,7 @@
       </div>
       <div class="form-group">
         <label>Criativo de origem</label>
-        <select id="f-criativo">
-          <option value="c1">Criativo 1 — ancoragem de preço</option>
-          <option value="c2">Criativo 2 — benefício oculto CNPJ</option>
-          <option value="c3">Criativo 3 — medo / sem plano</option>
-          <option value="c4">Criativo 4 — hospitais de referência</option>
-          <option value="organico">Orgânico / indicação</option>
-        </select>
+        <input type="text" id="f-criativo" placeholder="Ex: Criativo 1, Orgânico, Stories...">
       </div>
       <div class="form-group">
         <label>Status</label>
@@ -194,15 +188,6 @@
       <div class="form-group">
         <label>Data do lead *</label>
         <input type="date" id="f-data">
-      </div>
-      <div class="form-group">
-        <label>Como chegou</label>
-        <select id="f-canal">
-          <option value="whatsapp">WhatsApp direto</option>
-          <option value="formulario">Formulário do anúncio</option>
-          <option value="indicacao">Indicação</option>
-          <option value="organico">Orgânico (perfil/stories)</option>
-        </select>
       </div>
       <div class="form-group">
         <label>Nº de vidas (se empresa)</label>
@@ -284,8 +269,11 @@ function statusBadge(s) {
 }
 
 function criativoBadge(c) {
+  if (!c) return '<span class="criativo-badge c1">—</span>';
   const map = { c1:'c1', c2:'c2', c3:'c3', c4:'c4', organico:'corg' };
-  return `<span class="criativo-badge ${map[c]||'c1'}">${criativos[c]||c}</span>`;
+  const cls = map[c] || 'c1';
+  const label = criativos[c] || c;
+  return `<span class="criativo-badge ${cls}">${label}</span>`;
 }
 
 function fmtData(iso) {
@@ -301,10 +289,9 @@ function openModal(id) {
   document.getElementById('f-wpp').value = lead.wpp || '';
   document.getElementById('f-cnpj').value = lead.cnpj || 'sim';
   document.getElementById('f-produto').value = lead.produto || 'plano_saude';
-  document.getElementById('f-criativo').value = lead.criativo || 'c1';
+  document.getElementById('f-criativo').value = lead.criativo || '';
   document.getElementById('f-status').value = lead.status || 'novo';
   document.getElementById('f-data').value = lead.data_lead || new Date().toISOString().split('T')[0];
-  document.getElementById('f-canal').value = lead.canal || 'whatsapp';
   document.getElementById('f-vidas').value = lead.vidas || '';
   document.getElementById('f-motivo').value = lead.motivo || '';
   document.getElementById('f-obs').value = lead.obs || '';
@@ -332,7 +319,6 @@ async function salvarLead() {
     criativo: document.getElementById('f-criativo').value,
     status: document.getElementById('f-status').value,
     data_lead: document.getElementById('f-data').value || null,
-    canal: document.getElementById('f-canal').value || null,
     vidas: document.getElementById('f-vidas').value ? parseInt(document.getElementById('f-vidas').value) : null,
     motivo: document.getElementById('f-motivo').value || null,
     obs: document.getElementById('f-obs').value || null,
@@ -443,7 +429,7 @@ function renderLeads() {
       </select>
       <select id="filtro-criativo" onchange="renderLeads()">
         <option value="">Todos os criativos</option>
-        ${Object.entries(criativos).map(([v,l])=>`<option value="${v}" ${fCriativo===v?'selected':''}>${l}</option>`).join('')}
+        ${[...new Set(leads.map(l=>l.criativo).filter(Boolean))].map(c=>`<option value="${c}" ${fCriativo===c?'selected':''}>${criativos[c]||c}</option>`).join('')}
       </select>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">

@@ -52,6 +52,8 @@ header{position:sticky;top:0;z-index:50;background:rgba(10,22,40,.72);backdrop-f
 .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(200,169,110,.18)}
 .hero h1{font-size:clamp(2rem,4.2vw,3.3rem);font-weight:700;margin-bottom:1.05rem}
 .hero .sub{font-size:clamp(1.02rem,1.45vw,1.16rem);color:var(--on-navy-mut);max-width:40ch;margin-bottom:1.5rem;font-weight:400}
+.hero .price-flag{font-size:.84rem;color:#bcc8da;border-left:2px solid var(--gold);padding-left:.75rem;margin:0 0 1.25rem;max-width:46ch;line-height:1.5}
+.hero .price-flag b{color:#fff;font-weight:600}
 .hero-points{list-style:none;display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.5rem}
 .hero-points li{display:flex;align-items:flex-start;gap:.65rem;font-weight:500;color:#dbe3ee}
 .hero-points li .ck{width:22px;height:22px;flex:none;margin-top:1px;color:var(--gold)}
@@ -206,6 +208,7 @@ footer a{display:block;color:var(--on-navy-mut);margin-bottom:.55rem}footer a:ho
     <div class="reveal">
       <span class="eyebrow"><span class="dot"></span><span class="kicker">Plano de saúde · Empresarial &amp; MEI</span></span>
       <h1>Plano de saúde com CNPJ a partir de <span class="gold-text">R$ 264</span> por pessoa.</h1>
+      <p class="price-flag">Valor de referência na <b>1ª faixa etária da ANS (0 a 18 anos)</b> — a mais acessível. A partir dela, a mensalidade sobe conforme a idade de cada beneficiário, por isso a cotação é personalizada.</p>
       <p class="sub">Tem CNPJ e pelo menos 2 vidas? Garanta cobertura de operadoras renomadas pagando menos que um plano individual. E se o seu plano subiu, a gente compara o mercado e mostra quanto dá pra economizar migrando — sem recomeçar a carência.</p>
       <ul class="hero-points">
         <li><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> Vale para MEI, PME e empresas — a partir de 2 vidas no CNPJ</li>
@@ -216,7 +219,7 @@ footer a{display:block;color:var(--on-navy-mut);margin-bottom:.55rem}footer a:ho
         <a class="btn btn-gold" data-wa><svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>Pedir cotação no WhatsApp</a>
         <a class="btn btn-outline" href="#migracao">Meu plano subiu de preço</a>
       </div>
-      <p class="price-note">*Valor de referência por pessoa, sujeito a operadora, faixa etária, região, cobertura e número de vidas. A cotação é sem compromisso. A presença de hospitais específicos na rede depende do plano escolhido.</p>
+      <p class="price-note">*Valores de referência por pessoa, não vinculantes, sujeitos a operadora, idade de cada beneficiário, região, cobertura e número de vidas. A presença de hospitais específicos na rede depende do plano escolhido. Cotação sem compromisso.</p>
       <div class="trust">
         <span><b>CNPJ</b> 09.023.167/0001-42</span><span class="sep"></span>
         <span><b>SUSEP</b> corretor registrado</span><span class="sep"></span>
@@ -370,7 +373,8 @@ footer a{display:block;color:var(--on-navy-mut);margin-bottom:.55rem}footer a:ho
   <div class="wrap">
     <div class="sec-head center reveal"><span class="kicker">Dúvidas frequentes</span><h2>O que as empresas mais perguntam</h2></div>
     <div class="faq-list">
-      <details class="faq reveal"><summary>É a partir de R$ 264 mesmo? <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ans">Esse é um valor de referência por pessoa para contratação via CNPJ. O preço final depende da operadora, da faixa etária dos beneficiários, da região, da cobertura e do número de vidas. Por isso a cotação é personalizada e sem compromisso.</div></details>
+      <details class="faq reveal"><summary>É a partir de R$ 264 mesmo? <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ans">Sim — esse é o valor de referência por pessoa na <b>1ª faixa etária da ANS (0 a 18 anos)</b>, que é a mais barata. A partir dela, a mensalidade sobe conforme a idade de cada beneficiário, além de variar por operadora, região, cobertura e número de vidas. Por isso fazemos uma cotação personalizada com a idade real de quem vai usar o plano — assim você sabe o valor certo, sem surpresa.</div></details>
+      <details class="faq reveal"><summary>O preço muda conforme a idade? Como funcionam as faixas? <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ans">Muda, sim. Para planos contratados a partir de 2004, a ANS define 10 faixas etárias: 0–18, 19–23, 24–28, 29–33, 34–38, 39–43, 44–48, 49–53, 54–58 e 59 anos ou mais. A mensalidade aumenta a cada mudança de faixa e, por lei, o valor da última faixa pode ser até 6 vezes o da primeira. Na cotação, calculamos o valor exato para a idade de cada pessoa do contrato.</div></details>
       <details class="faq reveal"><summary>Sou MEI. Quanto tempo de CNPJ preciso e quantas vidas? <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ans">Pela regra da ANS, o CNPJ precisa estar ativo há pelo menos 6 meses. A maioria das operadoras pede a partir de 2 vidas (em geral titular + um dependente). Confirmamos as opções disponíveis para o seu caso.</div></details>
       <details class="faq reveal"><summary>Vou perder a carência se eu migrar de plano? <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ans">Em muitos casos não. A portabilidade de carências prevista pela ANS permite trocar de operadora aproveitando o tempo de plano já cumprido, desde que você atenda aos requisitos. Analisamos seu plano atual e confirmamos se você se enquadra antes de qualquer mudança.</div></details>
       <details class="faq reveal"><summary>Plano via CNPJ é mesmo mais barato que o individual? <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ans">Comparando planos de cobertura semelhante, costuma ser — porque a tabela empresarial dilui o risco em grupo. Não é uma regra absoluta para todos os produtos, então mostramos a comparação real lado a lado para você confirmar.</div></details>

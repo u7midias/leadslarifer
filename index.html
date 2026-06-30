@@ -108,6 +108,14 @@
   .toast.success { background: #3b6d11; }
   .toast.error { background: #a32d2d; }
 
+  .lead-name-link { cursor: pointer; color: #0f1b2d; transition: color 0.15s; }
+  .lead-name-link:hover { color: #C4A96B; text-decoration: underline; }
+
+  .view-field { display: flex; flex-direction: column; gap: 2px; }
+  .view-field-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+  .view-field-value { font-size: 13px; color: #1a1a1a; }
+  .view-obs-box { background: #f4f3ee; border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+
   .loading { display: flex; align-items: center; justify-content: center; padding: 40px; gap: 10px; color: #888; font-size: 13px; }
   .spinner { width: 20px; height: 20px; border: 2px solid #e0ddd4; border-top-color: #C4A96B; border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -219,6 +227,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-view">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="view-title">Detalhes do lead</h2>
+      <button class="btn btn-sm" onclick="closeViewModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="view-content"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeViewModal()">Fechar</button>
+      <button class="btn btn-primary" id="btn-view-editar"><i class="ti ti-edit"></i> Editar lead</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -232,6 +254,9 @@ let activeTab = 'dashboard';
 
 const criativos = { c1:'Ancoragem de preço', c2:'Benefício oculto CNPJ', c3:'Medo / sem plano', c4:'Hospitais de referência', organico:'Orgânico' };
 const statusLabels = { novo:'Novo', contato:'Em contato', proposta:'Proposta enviada', fechado:'Fechado', perdido:'Perdido' };
+const produtoLabels = { plano_saude:'Plano de saúde', seguro_carro:'Seguro de carro', consorcio:'Consórcio', outro:'Outro' };
+const motivoLabels = { preco:'Preço alto', concorrente:'Foi para concorrente', desistiu:'Desistiu do plano', sem_resposta:'Sem resposta', outra_cidade:'Outra cidade', pessoa_fisica:'Pessoa física', menos_3_vidas:'Menos de 3 vidas no CNPJ', outro:'Outro' };
+const cnpjLabels = { sim:'Sim', mei:'MEI', nao:'Não' };
 const statusColors = { novo:'#185fa5', contato:'#854f0b', proposta:'#534ab7', fechado:'#3b6d11', perdido:'#a32d2d' };
 const crColors = { c1:'#993C1D', c2:'#0F6E56', c3:'#854F0B', c4:'#185FA5', organico:'#534ab7' };
 
@@ -278,7 +303,47 @@ function criativoBadge(c) {
 
 function fmtData(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('pt-BR');
+  // Datas no formato "AAAA-MM-DD" (sem hora) são interpretadas pelo JS como UTC.
+  // Sem isso, no fuso de Brasília o dia exibido "volta" um dia. Forçamos meio-dia local.
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(iso + 'T12:00:00') : new Date(iso);
+  return d.toLocaleDateString('pt-BR');
+}
+
+function dataLocalHoje() {
+  const d = new Date();
+  const offsetMs = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offsetMs).toISOString().split('T')[0];
+}
+
+function viewLead(id) {
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+  document.getElementById('view-title').textContent = lead.nome;
+  document.getElementById('view-content').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${statusBadge(lead.status)}
+        ${criativoBadge(lead.criativo)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="view-field"><div class="view-field-label">WhatsApp</div><div class="view-field-value">${lead.wpp || '—'}</div></div>
+        <div class="view-field"><div class="view-field-label">Data do lead</div><div class="view-field-value">${fmtData(lead.data_lead || lead.created_at)}</div></div>
+        <div class="view-field"><div class="view-field-label">Tem CNPJ?</div><div class="view-field-value">${cnpjLabels[lead.cnpj] || '—'}</div></div>
+        <div class="view-field"><div class="view-field-label">Produto</div><div class="view-field-value">${produtoLabels[lead.produto] || '—'}</div></div>
+        <div class="view-field"><div class="view-field-label">Nº de vidas</div><div class="view-field-value">${lead.vidas || '—'}</div></div>
+        <div class="view-field"><div class="view-field-label">Motivo da perda</div><div class="view-field-value">${lead.motivo ? (motivoLabels[lead.motivo] || lead.motivo) : '—'}</div></div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Observações</div>
+        <div class="view-obs-box">${lead.obs ? String(lead.obs).replace(/</g,'&lt;') : 'Nenhuma observação registrada.'}</div>
+      </div>
+    </div>`;
+  document.getElementById('btn-view-editar').onclick = () => { closeViewModal(); openModal(id); };
+  document.getElementById('modal-view').classList.add('open');
+}
+
+function closeViewModal() {
+  document.getElementById('modal-view').classList.remove('open');
 }
 
 function openModal(id) {
@@ -291,7 +356,7 @@ function openModal(id) {
   document.getElementById('f-produto').value = lead.produto || 'plano_saude';
   document.getElementById('f-criativo').value = lead.criativo || '';
   document.getElementById('f-status').value = lead.status || 'novo';
-  document.getElementById('f-data').value = lead.data_lead || new Date().toISOString().split('T')[0];
+  document.getElementById('f-data').value = lead.data_lead || dataLocalHoje();
   document.getElementById('f-vidas').value = lead.vidas || '';
   document.getElementById('f-motivo').value = lead.motivo || '';
   document.getElementById('f-obs').value = lead.obs || '';
@@ -400,7 +465,7 @@ function renderDashboard() {
       ${leads.length === 0 ? `<div class="empty"><i class="ti ti-users" aria-hidden="true"></i>Nenhum lead ainda. Adicione o primeiro!</div>` :
       `<table><thead><tr><th>Nome</th><th>Criativo</th><th>Status</th><th>Data</th></tr></thead>
       <tbody>${leads.slice(0,6).map(l=>`<tr>
-        <td style="font-weight:500;">${l.nome}</td>
+        <td style="font-weight:500;"><span class="lead-name-link" onclick="viewLead('${l.id}')">${l.nome}</span></td>
         <td>${criativoBadge(l.criativo)}</td>
         <td>${statusBadge(l.status)}</td>
         <td style="color:#888;">${fmtData(l.data_lead || l.created_at)}</td>
@@ -438,7 +503,7 @@ function renderLeads() {
         `<table>
           <thead><tr><th>Nome</th><th>WhatsApp</th><th>Criativo</th><th>Status</th><th>Data</th><th></th></tr></thead>
           <tbody>${filtered.map(l=>`<tr>
-            <td style="font-weight:500;">${l.nome}</td>
+            <td style="font-weight:500;"><span class="lead-name-link" onclick="viewLead('${l.id}')">${l.nome}</span></td>
             <td><a href="https://wa.me/55${l.wpp.replace(/\D/g,'')}" target="_blank" style="color:#0f1b2d;text-decoration:none;display:flex;align-items:center;gap:4px;"><i class="ti ti-brand-whatsapp" style="color:#25d366;font-size:16px;"></i>${l.wpp}</a></td>
             <td>${criativoBadge(l.criativo)}</td>
             <td>${statusBadge(l.status)}</td>

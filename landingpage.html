@@ -74,6 +74,31 @@ header{position:sticky;top:0;z-index:50;background:rgba(10,22,40,.72);backdrop-f
 .consent input{margin-top:3px;width:16px;height:16px;flex:none;accent-color:var(--gold-deep)}
 .consent a{color:var(--gold-deep);text-decoration:underline}
 .quote .btn-whats{width:100%}.quote .reassure{text-align:center;font-size:.75rem;color:var(--ink-mut);margin-top:.8rem}
+/* Wizard de cotação */
+.qprogress-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.qprogress-top .qstep-label{font-size:.76rem;font-weight:700;color:var(--gold-deep);letter-spacing:.02em}
+.qprogress-top .qpct{font-size:.76rem;color:var(--ink-mut)}
+.qprogress{height:6px;border-radius:999px;background:var(--line-cream);overflow:hidden;margin-bottom:1.4rem}
+.qprogress-bar{height:100%;width:25%;border-radius:999px;background:var(--grad-gold);transition:width .35s var(--ease)}
+.qdots{display:flex;gap:.4rem;margin-bottom:1.1rem}
+.qdots .qd{flex:1;height:4px;border-radius:999px;background:var(--line-cream);transition:background .3s var(--ease)}
+.qdots .qd.done{background:var(--gold-deep)}
+.qstep{display:none}
+.qstep.active{display:block;animation:qin .35s var(--ease)}
+@keyframes qin{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+.qhead{font-weight:700;font-size:1.02rem;color:var(--ink);margin-bottom:.15rem}
+.qsub{font-size:.82rem;color:var(--ink-mut);margin-bottom:1rem}
+.perfil-chips{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem}
+.perfil-chip{border:1.5px solid var(--line-cream);border-radius:var(--radius-sm);padding:.75rem .7rem;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
+.perfil-chip:hover{border-color:var(--gold)}
+.perfil-chip.sel{border-color:var(--gold-deep);background:rgba(200,169,110,.14);color:var(--gold-deep)}
+.qnav{display:flex;gap:.7rem;margin-top:.3rem}
+.qnav .btn-outline-q{flex:none;background:transparent;border:1.5px solid var(--line-cream);color:var(--ink-mut);border-radius:999px;padding:.85rem 1.1rem;font-weight:600;font-size:.9rem;cursor:pointer;font-family:inherit}
+.qnav .btn-outline-q:hover{border-color:var(--gold)}
+.qnav .btn-next{flex:1}
+.qrecap{background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.3);border-radius:var(--radius-sm);padding:.9rem 1rem;margin-bottom:1rem;font-size:.84rem;color:var(--ink)}
+.qrecap div{margin-bottom:.25rem}.qrecap div:last-child{margin-bottom:0}
+.qrecap b{color:var(--gold-deep)}
 section.block{padding:clamp(56px,7vw,92px) 0}
 .on-cream{background:var(--cream);color:var(--ink)}.on-cream .sub{color:var(--ink-mut)}
 .on-dark{background:var(--navy-900)}
@@ -108,7 +133,9 @@ section.block{padding:clamp(56px,7vw,92px) 0}
 .mig .chip svg{width:20px;height:20px;color:var(--gold);flex:none;margin-top:2px}
 .mig-card{background:var(--navy-900);border:1px solid var(--line-navy);border-radius:16px;padding:26px;text-align:center}
 .mig-card .lbl{font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--on-navy-mut)}
-.mig-card .big{font-family:"Cinzel";font-weight:700;font-size:2.4rem;margin:.2rem 0 .1rem}
+.mig-card .icon-badge{width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(200,169,110,.55);display:flex;align-items:center;justify-content:center;margin:.9rem auto .6rem}
+.mig-card .icon-badge svg{width:22px;height:22px;color:var(--gold)}
+.mig-card .big{font-family:"Cinzel";font-weight:700;font-size:1.7rem;margin:.2rem 0 .1rem;line-height:1.25}
 .mig-card .small{font-size:.84rem;color:var(--on-navy-mut);margin-bottom:1.2rem}
 .mig-card .btn{width:100%}
 @media(max-width:820px){.mig{grid-template-columns:1fr}}
@@ -233,17 +260,53 @@ footer a{display:block;color:var(--on-navy-mut);margin-bottom:.55rem}footer a:ho
 
     <div class="quote reveal" id="cotacao">
       <h3>Receba sua cotação em minutos</h3>
-      <p class="lead">Preencha em 30 segundos. As respostas vão direto para o WhatsApp da corretora.</p>
-      <div class="field"><label for="nome">Seu nome</label><input id="nome" type="text" placeholder="Como devemos te chamar?" autocomplete="name"></div>
-      <div class="field"><label for="beneficiarios">Beneficiários e idade de cada</label><textarea id="beneficiarios" rows="3" placeholder="Ex.: Titular 34 anos, Cônjuge 32 anos, Filho 6 anos"></textarea><span class="hint">Liste todas as pessoas que vão entrar no plano e a idade de cada uma.</span></div>
-      <div class="field-row">
-        <div class="field"><label for="tipo">Perfil</label><select id="tipo"><option value="MEI">MEI</option><option value="PME (2 a 29 vidas)">PME (2–29 vidas)</option><option value="Empresarial (30+ vidas)">Empresarial (30+)</option><option value="Já tenho plano e quero migrar">Já tenho plano (migração)</option></select></div>
-        <div class="field"><label for="vidas">Nº de vidas</label><input id="vidas" type="number" min="1" placeholder="Ex.: 3" inputmode="numeric"></div>
+      <p class="lead">Responda 4 passos rápidos. No fim, enviamos direto pro WhatsApp da corretora.</p>
+
+      <div class="qprogress-top"><span class="qstep-label" id="qlabel">Passo 1 de 4 · Seu perfil</span><span class="qpct" id="qpct">25%</span></div>
+      <div class="qprogress"><div class="qprogress-bar" id="qbar"></div></div>
+
+      <!-- Passo 1 -->
+      <div class="qstep active" data-step="1">
+        <div class="qhead">Qual é o seu perfil?</div>
+        <div class="qsub">Isso já ajuda a filtrar as operadoras certas pra você.</div>
+        <div class="perfil-chips" id="perfilChips">
+          <div class="perfil-chip" data-val="MEI">MEI</div>
+          <div class="perfil-chip" data-val="PME (2 a 29 vidas)">PME (2–29 vidas)</div>
+          <div class="perfil-chip" data-val="Empresarial (30+ vidas)">Empresarial (30+)</div>
+          <div class="perfil-chip" data-val="Já tenho plano e quero migrar">Já tenho plano (migração)</div>
+        </div>
+        <select id="tipo" style="display:none"><option value="MEI">MEI</option><option value="PME (2 a 29 vidas)">PME (2–29 vidas)</option><option value="Empresarial (30+ vidas)">Empresarial (30+)</option><option value="Já tenho plano e quero migrar">Já tenho plano (migração)</option></select>
+        <div class="field"><label for="vidas">Nº de vidas no CNPJ</label><input id="vidas" type="number" min="1" placeholder="Ex.: 3" inputmode="numeric"></div>
+        <div class="qnav"><button type="button" class="btn btn-gold qnav-btn qnav-next" data-next="2">Próximo passo</button></div>
       </div>
-      <div class="field"><label for="tel">Seu WhatsApp</label><input id="tel" type="tel" placeholder="(11) 90000-0000" autocomplete="tel"></div>
-      <label class="consent"><input type="checkbox" id="lgpd"><span>Autorizo a Larifer Seguros a entrar em contato e tratar meus dados para esta cotação, conforme a <a href="#privacidade">Política de Privacidade</a> (LGPD).</span></label>
-      <button class="btn btn-whats" id="enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>Enviar para o WhatsApp</button>
-      <p class="reassure">Sem compromisso · Resposta em horário comercial</p>
+
+      <!-- Passo 2 -->
+      <div class="qstep" data-step="2">
+        <div class="qhead">Quem vai usar o plano?</div>
+        <div class="qsub">Liste as pessoas e a idade de cada uma — é o que muda o valor final.</div>
+        <div class="field"><label for="beneficiarios">Beneficiários e idade de cada</label><textarea id="beneficiarios" rows="3" placeholder="Ex.: Titular 34 anos, Cônjuge 32 anos, Filho 6 anos"></textarea><span class="hint">Liste todas as pessoas que vão entrar no plano e a idade de cada uma.</span></div>
+        <div class="qnav"><button type="button" class="qnav-btn btn-outline-q" data-back="1">Voltar</button><button type="button" class="btn btn-gold qnav-btn qnav-next" data-next="3">Próximo passo</button></div>
+      </div>
+
+      <!-- Passo 3 -->
+      <div class="qstep" data-step="3">
+        <div class="qhead">Quase lá! Como te chamamos?</div>
+        <div class="qsub">Só pra corretora falar com você pelo nome no WhatsApp.</div>
+        <div class="field"><label for="nome">Seu nome</label><input id="nome" type="text" placeholder="Como devemos te chamar?" autocomplete="name"></div>
+        <div class="field"><label for="tel">Seu WhatsApp</label><input id="tel" type="tel" placeholder="(11) 90000-0000" autocomplete="tel"></div>
+        <div class="qnav"><button type="button" class="qnav-btn btn-outline-q" data-back="2">Voltar</button><button type="button" class="btn btn-gold qnav-btn qnav-next" data-next="4">Revisar e enviar</button></div>
+      </div>
+
+      <!-- Passo 4 -->
+      <div class="qstep" data-step="4">
+        <div class="qhead">Confirme e envie</div>
+        <div class="qsub">Confira os dados — dá pra voltar e ajustar qualquer campo.</div>
+        <div class="qrecap" id="qrecap"></div>
+        <label class="consent"><input type="checkbox" id="lgpd"><span>Autorizo a Larifer Seguros a entrar em contato e tratar meus dados para esta cotação, conforme a <a href="#privacidade">Política de Privacidade</a> (LGPD).</span></label>
+        <button class="btn btn-whats" id="enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>Enviar para o WhatsApp</button>
+        <p class="reassure">Sem compromisso · Resposta em horário comercial</p>
+        <div class="qnav" style="margin-top:.6rem"><button type="button" class="qnav-btn btn-outline-q" data-back="3">Voltar</button></div>
+      </div>
     </div>
   </div>
 </section>
@@ -305,8 +368,9 @@ footer a{display:block;color:var(--on-navy-mut);margin-bottom:.55rem}footer a:ho
       </div>
       <div class="mig-card">
         <div class="lbl">O que a migração costuma fazer</div>
-        <div class="big gold-text">↓ na mensalidade</div>
-        <div class="small">mantendo cobertura compatível</div>
+        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+        <div class="big gold-text">Mensalidade menor</div>
+        <div class="small">mantendo cobertura compatível com a que você já tem</div>
         <a class="btn btn-gold" data-wa data-msg="Olá! Quero avaliar a migração do meu plano de saúde para reduzir a mensalidade.">Simular minha economia</a>
         <p class="small" style="margin:.9rem 0 0">*Quando você cumpre os requisitos de portabilidade.</p>
       </div>
@@ -438,6 +502,63 @@ footer a{display:block;color:var(--on-navy-mut);margin-bottom:.55rem}footer a:ho
     var msg="Olá, Larifer! Quero uma cotação de plano de saúde.\n\n• Nome: "+(v("nome")||"—")+"\n• Beneficiários e idades: "+(v("beneficiarios")||"—")+"\n• Perfil: "+document.getElementById("tipo").value+"\n• Nº de vidas: "+(v("vidas")||"—")+"\n• Meu WhatsApp: "+(v("tel")||"—");
     window.open(waLink(msg),"_blank","noopener");
   });}
+
+  // Wizard de cotação
+  (function(){
+    var quote=document.getElementById("cotacao");
+    if(!quote)return;
+    var steps=quote.querySelectorAll(".qstep");
+    var bar=document.getElementById("qbar");
+    var label=document.getElementById("qlabel");
+    var pct=document.getElementById("qpct");
+    var tipoSel=document.getElementById("tipo");
+    var labels={1:"Passo 1 de 4 · Seu perfil",2:"Passo 2 de 4 · Quem vai usar",3:"Passo 3 de 4 · Seus dados",4:"Passo 4 de 4 · Revisar e enviar"};
+    var v=function(id){var e=document.getElementById(id);return e?(e.value||"").trim():"";};
+
+    function goTo(n){
+      steps.forEach(function(s){s.classList.toggle("active",s.getAttribute("data-step")===String(n));});
+      bar.style.width=(n*25)+"%";
+      pct.textContent=(n*25)+"%";
+      label.textContent=labels[n]||"";
+      if(n===4)buildRecap();
+      quote.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+
+    function buildRecap(){
+      var r=document.getElementById("qrecap");
+      r.innerHTML=
+        "<div><b>Perfil:</b> "+(tipoSel.value||"—")+"</div>"+
+        "<div><b>Nº de vidas:</b> "+(v("vidas")||"—")+"</div>"+
+        "<div><b>Beneficiários:</b> "+(v("beneficiarios")||"—")+"</div>"+
+        "<div><b>Nome:</b> "+(v("nome")||"—")+"</div>"+
+        "<div><b>WhatsApp:</b> "+(v("tel")||"—")+"</div>";
+    }
+
+    // chips de perfil
+    var chips=quote.querySelectorAll(".perfil-chip");
+    function selectChip(el){
+      chips.forEach(function(c){c.classList.remove("sel");});
+      el.classList.add("sel");
+      tipoSel.value=el.getAttribute("data-val");
+    }
+    chips.forEach(function(c){c.addEventListener("click",function(){selectChip(c);});});
+    selectChip(chips[0]);
+
+    // navegação
+    quote.querySelectorAll("[data-next]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var cur=btn.closest(".qstep").getAttribute("data-step");
+        if(cur==="1"&&!v("vidas")){document.getElementById("vidas").focus();return;}
+        if(cur==="2"&&!v("beneficiarios")){document.getElementById("beneficiarios").focus();return;}
+        if(cur==="3"&&(!v("nome")||!v("tel"))){ (!v("nome")?document.getElementById("nome"):document.getElementById("tel")).focus();return;}
+        goTo(parseInt(btn.getAttribute("data-next"),10));
+      });
+    });
+    quote.querySelectorAll("[data-back]").forEach(function(btn){
+      btn.addEventListener("click",function(){goTo(parseInt(btn.getAttribute("data-back"),10));});
+    });
+  })();
+
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{threshold:.12,rootMargin:"0px 0px -40px 0px"});
   document.querySelectorAll(".reveal").forEach(function(el){io.observe(el);});
 })();
